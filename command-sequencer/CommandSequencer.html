@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script>
+		if (typeof App === 'undefined') {
+			var App = {
+				log: function() {
+					alert(Array.prototype.join.call(arguments, ', '));
+				},
+
+				prompt: function() {
+					return prompt.apply(window, arguments);
+				},
+
+				onReady: function(fn) {
+					document.addEventListener('DOMContentLoaded', fn, false);
+				}
+			};
+		}
+	</script>
+	<script src="CommandSequencer.js"></script>
+</head>
+<body>
+	<div id="bookDescription"></div>
+</body>
+</html>
