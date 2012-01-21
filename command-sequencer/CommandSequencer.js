@@ -1,127 +1,154 @@
-if (typeof App === 'undefined') {
-	var App = (function() {
+// requires Core.<env>.js
 
-		return {
-			log: function() {
-				throw 'App.log() is not implemented';
-			},
+var App = {
+    /**
+     * Performs a shallow copy of all properties of arguments 2 to n (the source objects) to argument 1 (the destination object).
+     */
+    apply: function(dest) {
+        if (arguments.length < 2) {
+            return dest;
+        }
 
-			prompt: function() {
-				throw 'App.prompt() is not implemented';
-			},
+        var sources = Array.prototype.slice.call(arguments, 1);
+        sources.forEach(function(src) {
+            for (var p in src) {
+                if (src.hasOwnProperty(p)) {
+                    dest[p] = src[p];
+                }
+            }
+        });
+    }
+};
 
-			onReady: function() {
-				throw 'App.onReady is not implemented';
-			}
-		};
-	})();
-}
-
-(function() {
-	App.Resource = (function() {
-		var R = function(path, resourceId) {
-			this.path = path;
-			this.resourceId = resourceId;
-		};
-		R.prototype = {
-			get: function(callback) {
-				callback.call(undefined, {
-					success: true,
-					data: {
-						name: this.resourceId,
-						description: "Description of " + this.resourceId
-					}
-				});
-			}
-		};
-
-		return R;
-	})();
-
-	App.CommandSequencer = (function() {
-		var running = false;
-		var commands = [];
-		var context = {};
-		var listeners = {};
-
-		function run() {
-			if (running) {
-				var command = commands.shift();
-				if (command == null) {
-					running = false;
-					return;
-				}
-
-				fire('commandstart', {commandId: command.id});
-				try {
-					command.execute(function(result) {
-						if (result.success) {
-							fire('commandcompletion', {commandId: command.id, result: result});
-							run();
-						}
-						else {
-							fire('commandfailure', {commandId: command.id, result: result});
-						}
-					}, context);
-				} catch (e) {
-					fire('commandfailure', {commandId: command.id, error: e});
-				}
-			}
+/**
+ * A fake resource class.
+ */
+App.Resource = (function() {
+	var R = function(path, resourceId) {
+		this.path = path;
+		this.resourceId = resourceId;
+	};
+	R.prototype = {
+		get: function(callback) {
+            Core.delay(function() {
+    			callback.call(undefined, {
+    				success: true,
+    				data: {
+    					name: this.resourceId,
+    					description: "Description of " + this.resourceId
+    				}
+    			});
+            }.bind(this), 1000);
 		}
+	};
 
-		function fire(eventName, eventData) {
-			var listenersForEvent = listeners[eventName];
-			if (listenersForEvent !== undefined) {
-				listenersForEvent.forEach(function(listener) {
-					listener.call(undefined, eventName, eventData);
-				});
-			}
-		}
-
-		return {
-			add: function(command) {
-				if (command === null || command === undefined) {
-					throw {message: 'Invalid command. Commands must not be null.', command: command};
-				}
-				if (typeof command.execute !== 'function' || typeof command.id !== 'string') {
-					throw {message: 'Invalid command. Commands must respect the contract: {id: String, execute(callback: function}: function}', command: command};
-				}
-				commands.push(command);
-			},
-			
-			start: function() {
-				if (!running) {
-					running = true;
-					run();
-				}
-			},
-
-			stop: function() {
-				running = false;
-			},
-
-			addListener: function(eventName, listener) {
-				if (listeners[eventName] === undefined) {
-					listeners[eventName] = [];
-				}
-				listeners[eventName].push(listener);
-			},
-
-			removeListener: function(eventName, listener) {
-				var listenersForEvent = listeners[eventName];
-				if (listenersForEvent !== undefined) {
-					listenersForEvent.remove(listener); // remove(o)?
-				}
-			}
-		};
-	})();
+	return R;
 })();
 
-App.onReady(function() {
-	App.CommandSequencer.add({
+App.EventPublisher = function() {
+    this.listeners = {};
+};
+App.EventPublisher.prototype = {
+    fire: function(eventName, eventData) {
+        var listenersForEvent = this.listeners[eventName];
+        if (listenersForEvent !== undefined) {
+            listenersForEvent.forEach(function(listener) {
+                listener.call(undefined, eventName, eventData);
+            });
+        }
+    },
+
+    addListener: function(eventNames, listener) {
+        if (typeof eventNames === 'string') {
+            eventNames = [eventNames];
+        }
+        eventNames.forEach(function(eventName) {
+            if (this.listeners[eventName] === undefined) {
+    			this.listeners[eventName] = [];
+    		}
+    		this.listeners[eventName].push(listener);
+        }.bind(this));
+	},
+
+	removeListener: function(eventName, listener) {
+		var listenersForEvent = this.listeners[eventName];
+		if (listenersForEvent !== undefined) {
+			var idx = listenersForEvent.indexOf(listener);
+            listenersForEvent.splice(idx, 1);
+		}
+	}
+};
+
+App.CommandSequencer = {
+    create: function() {
+        var that = Object.create(new App.EventPublisher());
+
+        // private members
+        var running = false;
+    	var commands = [];
+    	var context = {};
+
+    	function run() {
+    		if (running) {
+    			var command = commands.shift();
+    			if (command === undefined) {
+    				that.stop();
+    				return;
+    			}
+
+    			that.fire('commandstart', {commandId: command.id});
+    			try {
+    				command.execute(function (result) {
+    					if (result.success) {
+    						that.fire('commandcompletion', {commandId: command.id, result: result});
+    						run();
+    					}
+    					else {
+    						that.fire('commandfailure', {commandId: command.id, result: result});
+    					}
+    				}, context);
+    			}
+    			catch (e) {
+    				that.fire('commandfailure', {commandId: command.id, error: e});
+    			}
+    		}
+    	}
+
+    	App.apply(that, {
+    		add: function(command) {
+    			if (command === null || command === undefined) {
+    				throw {message: 'Invalid command. Commands must not be null.', command: command};
+    			}
+    			if (typeof command.execute !== 'function' || typeof command.id !== 'string') {
+    				throw {message: 'Invalid command. Commands must respect the contract: {id: String, execute(callback: function}: function}', command: command};
+    			}
+    			commands.push(command);
+    		},
+
+    		start: function() {
+    			if (!running) {
+                    running = true;
+                    this.fire('started');
+                    run();
+    			}
+    		},
+
+    		stop: function() {
+    			running = false;
+                this.fire('stopped');
+    		}
+    	});
+
+        return that;
+    }
+};
+
+Core.onReady(function() {
+    var sequencer = App.CommandSequencer.create();
+	sequencer.add({
 		id: 'User prompt',
 		execute: function(callback, context) {
-			var userVal = App.prompt('Please enter the name of a book');
+			var userVal = Core.prompt('Please enter the name of a book');
 			if (typeof userVal !== 'string') {
 				callback({success: false, reason: "Action cancelled by user"});
 			}
@@ -132,7 +159,7 @@ App.onReady(function() {
 		}
 	});
 
-	App.CommandSequencer.add({
+	sequencer.add({
 		id: 'Info retrieval',
 		execute: function(callback, context) {
 			new App.Resource('book', context.bookName).get(function(response) {
@@ -147,11 +174,11 @@ App.onReady(function() {
 		}
 	});
 
-	App.CommandSequencer.add({
+	sequencer.add({
 		id: 'Document update',
 		execute: function(callback, context) {
 			var descriptionDiv = document.getElementById('bookDescription');
-			if (descriptionDiv == null) {
+			if (descriptionDiv === null) {
 				callback({success: false, reason: "No element found with id 'bookDescription'"});
 			}
 			else {
@@ -162,11 +189,11 @@ App.onReady(function() {
 	});
 
 	var listener = function(eventName, e) {
-		App.log(eventName, e.commandId, e.result ? e.result.reason : e);
+		Core.log(eventName, e);
 	};
-	//App.CommandSequencer.addListener('commandstart', listener);
-	//App.CommandSequencer.addListener('commandcompletion', listener);
-	App.CommandSequencer.addListener('commandfailure', listener);
 
-	App.CommandSequencer.start();
+	sequencer.addListener(['commandstart', 'commandcompletion'], listener);
+    sequencer.addListener(['commandfailure', 'started', 'stopped'], listener);
+
+	sequencer.start();
 });
