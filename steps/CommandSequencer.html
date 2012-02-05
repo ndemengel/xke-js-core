@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="../command-sequencer/Core.window.js"></script>
+</head>
+<body>
+    <script>
+        var stepRegexp = /.*\?(step-[0-9]+)/;
+        if (!stepRegexp.test(window.location.href)) {
+            alert("Please append the name of the JS file you want to load to the URL. Example: '?step-1'.");
+            return;
+        }
+        var jsFile = stepRegexp.exec(window.location.href)[1];
+        var scriptElem = document.createElement('script');
+        scriptElem.src = jsFile + '.js';
+        document.body.appendChild(scriptElem);
+    </script>
+	<div id="bookDescription"></div>
+</body>
+</html>

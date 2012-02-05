@@ -9,8 +9,7 @@
 
 1. *\[Object literal\]* write a simple sequencer object capable of changing its internal state via the methods start() and stop().
 1. *\[Namespace\]* what if another library defines an object with the same name? Define a namespace for your code.
-1. *\[Array + Duck typing\]* write the method add() that accepts a command. Once the sequencer is started, execute commands that are registered in order. Pass them a context object so they can collaborate (variation: give each command the result of the previous one).
-1. Write some commands to be executed by the sequencer.
+1. *\[Array + Duck typing\]* write the method add() that accepts a command. Once the sequencer is started, execute commands that are registered in order. Pass them a context object so they can collaborate (variation: give each command the result of the previous one). Write some commands to be executed by the sequencer.
 1. *\[Asynchronicity\]* make your sequencer handle asynchronous commands by passing them a callback function to be called once they completed. Write an asynchronous command (use setTimeout) to demonstrate it.
 1. *\[Encapsulation\]* using a closure, hide the internal state of the sequencer.
 1. *\[Events\]* make the sequencer accept listeners for the following events: the sequencer is started, the sequencer is stopped, a command is executed, a command completed. Write a logger that makes use of it (use the functions defined in Core.js).

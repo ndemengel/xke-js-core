@@ -81,7 +81,8 @@ App.EventPublisher.prototype = {
 
 App.CommandSequencer = {
     create: function() {
-        var that = Object.create(new App.EventPublisher());
+        var that = Object.create(App.EventPublisher.prototype);
+        App.EventPublisher.call(that);
 
         // private members
         var running = false;

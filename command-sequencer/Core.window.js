@@ -56,7 +56,13 @@ var Core = {
 	},
 
 	onReady: function(fn) {
-		document.addEventListener('DOMContentLoaded', fn, false);
+        if (document.readyState === 'complete') {
+            fn.call(undefined);
+        }
+        else {
+            // document.addEventListener('DOMContentLoaded', fn, false);
+            window.addEventListener("load", fn, false);
+        }
 	},
 
     delay: function() {
