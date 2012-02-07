@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="../command-sequencer/Core.window.js"></script>
+    <script src="../Core.window.js"></script>
+    <script src="../Core.common.js"></script>
 </head>
 <body>
     <script>
-        var stepRegexp = /.*\?(step-[0-9]+)/;
+        var stepRegexp = /.*\?(step-[0-9]+[a-z]*)/;
         if (!stepRegexp.test(window.location.href)) {
             alert("Please append the name of the JS file you want to load to the URL. Example: '?step-1'.");
             return;

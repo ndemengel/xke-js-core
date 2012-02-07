@@ -1,49 +1,9 @@
 // requires Core.<env>.js
+// requires Core.common.js
 
-var App = {
-    /**
-     * Performs a shallow copy of all properties of arguments 2 to n (the source objects) to argument 1 (the destination object).
-     */
-    apply: function(dest) {
-        if (arguments.length < 2) {
-            return dest;
-        }
-
-        var sources = Array.prototype.slice.call(arguments, 1);
-        sources.forEach(function(src) {
-            for (var p in src) {
-                if (src.hasOwnProperty(p)) {
-                    dest[p] = src[p];
-                }
-            }
-        });
-    }
-};
-
-/**
- * A fake resource class.
- */
-App.Resource = (function() {
-	var R = function(path, resourceId) {
-		this.path = path;
-		this.resourceId = resourceId;
-	};
-	R.prototype = {
-		get: function(callback) {
-            Core.delay(function() {
-    			callback.call(undefined, {
-    				success: true,
-    				data: {
-    					name: this.resourceId,
-    					description: "Description of " + this.resourceId
-    				}
-    			});
-            }.bind(this), 1000);
-		}
-	};
-
-	return R;
-})();
+if (typeof App === 'undefined') {
+	App = {};
+}
 
 App.EventPublisher = function() {
     this.listeners = {};
@@ -115,7 +75,7 @@ App.CommandSequencer = {
     		}
     	}
 
-    	App.apply(that, {
+    	return Core.apply(that, {
     		add: function(command) {
     			if (command === null || command === undefined) {
     				throw {message: 'Invalid command. Commands must not be null.', command: command};
@@ -139,8 +99,6 @@ App.CommandSequencer = {
                 this.fire('stopped');
     		}
     	});
-
-        return that;
     }
 };
 
@@ -163,7 +121,7 @@ Core.onReady(function() {
 	sequencer.add({
 		id: 'Info retrieval',
 		execute: function(callback, context) {
-			new App.Resource('book', context.bookName).get(function(response) {
+			new Core.Resource('book', context.bookName).get(function(response) {
 				if (response.success) {
 					context.book = response.data;
 					callback({success: true});

@@ -1,7 +1,9 @@
-if (!window.App) {
-    window.App = {};
+// requires Core.<env>.js
+// requires Core.common.js
+
+if (typeof App === 'undefined') {
+    App = {};
 }
-var App = window.App;
 
 App.Sequencer = {
     running: false,
@@ -9,14 +11,13 @@ App.Sequencer = {
     context: {},
 
     run: function() {
-        if (this.running) {
+        while (this.running) {
             var command = this.commands.shift();
             if (!command) {
                 this.stop();
             }
             else {
                 command(this.context);
-                this.run();
             }
         }
     },
@@ -37,11 +38,11 @@ App.Sequencer = {
 
 Core.onReady(function() {
     App.Sequencer.add(function(ctxt) {
-        console.log("First command. " + ctxt.firstCommandCalled);
+        Core.log("First command. " + ctxt.firstCommandCalled);
         ctxt.firstCommandCalled = true;
     });
     App.Sequencer.add(function(ctxt) {
-        console.log("Second command. " + ctxt.firstCommandCalled);
+        Core.log("Second command. " + ctxt.firstCommandCalled);
     });
     App.Sequencer.start();
 });

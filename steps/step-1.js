@@ -1,3 +1,6 @@
+// requires Core.<env>.js
+// requires Core.common.js
+
 var Sequencer = {
     running: false,
 
@@ -11,9 +14,9 @@ var Sequencer = {
 };
 
 Core.onReady(function() {
-    console.log(Sequencer.running);
+    Core.log(Sequencer.running);
     Sequencer.start();
-    console.log(Sequencer.running);
+    Core.log(Sequencer.running);
     Sequencer.stop();
-    console.log(Sequencer.running);
+    Core.log(Sequencer.running);
 });

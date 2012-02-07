@@ -1,7 +1,9 @@
-if (!window.App) {
-    window.App = {};
+// requires Core.<env>.js
+// requires Core.common.js
+
+if (typeof App === 'undefined') {
+    App = {};
 }
-var App = window.App;
 
 App.Sequencer = {
     running: false,
@@ -16,9 +18,9 @@ App.Sequencer = {
 };
 
 Core.onReady(function() {
-    console.log(App.Sequencer.running);
+    Core.log(App.Sequencer.running);
     App.Sequencer.start();
-    console.log(App.Sequencer.running);
+    Core.log(App.Sequencer.running);
     App.Sequencer.stop();
-    console.log(App.Sequencer.running);
+    Core.log(App.Sequencer.running);
 });

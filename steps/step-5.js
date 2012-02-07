@@ -5,38 +5,40 @@ if (typeof App === 'undefined') {
     App = {};
 }
 
-App.Sequencer = {
-    running: false,
-    commands: [],
-    context: {},
+App.Sequencer = (function() {
+    var running = false;
+    var commands = [];
+    var context = {};
 
-    run: function() {
-        if (this.running) {
-            var command = this.commands.shift();
+    function run() {
+        if (running) {
+            var command = commands.shift();
             if (!command) {
-                this.stop();
+                running = false;
             }
             else {
-                command(this.context, function() {
-                	this.run();
-				}.bind(this));
+                command(context, function() {
+                	run();
+				});
             }
         }
-    },
-
-    start: function() {
-        this.running = true;
-        this.run();
-    },
-
-    stop: function() {
-        this.running = false;
-    },
-
-    add: function(command) {
-        this.commands.push(command);
     }
-};
+
+	return {
+		start: function() {
+			running = true;
+			run();
+		},
+
+		stop: function() {
+			running = false;
+		},
+
+		add: function(command) {
+			commands.push(command);
+		}
+	};
+})();
 
 Core.onReady(function() {
     App.Sequencer.add(function(ctxt, callback) {
