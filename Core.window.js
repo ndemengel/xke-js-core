@@ -1,3 +1,5 @@
+"use strict"
+
 var Core = {
 	log: function() {
         var args = [];

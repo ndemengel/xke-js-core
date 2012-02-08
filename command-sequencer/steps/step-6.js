@@ -1,6 +1,8 @@
+"use strict"
 // requires Core.<env>.js
 // requires Core.common.js
 
+var App = App;
 if (typeof App === 'undefined') {
     App = {};
 }

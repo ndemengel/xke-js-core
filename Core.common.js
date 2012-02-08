@@ -1,3 +1,4 @@
+"use strict"
 // requires Core.<env>.js
 
 /* Polyfills */

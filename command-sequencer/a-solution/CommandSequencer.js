@@ -1,42 +1,43 @@
+"use strict"
 // requires Core.<env>.js
 // requires Core.common.js
 
+var App = App;
 if (typeof App === 'undefined') {
 	App = {};
 }
 
 App.EventPublisher = function() {
-    this.listeners = {};
-};
-App.EventPublisher.prototype = {
-    fire: function(eventName, eventData) {
-        var listenersForEvent = this.listeners[eventName];
-        if (listenersForEvent !== undefined) {
-            listenersForEvent.forEach(function(listener) {
-                listener.call(undefined, eventName, eventData);
-            });
-        }
-    },
+    var listeners = {};
 
-    addListener: function(eventNames, listener) {
+	function listenersFor(eventName) {
+        var ls = listeners[eventName];
+        if (!ls) {
+            ls = [];
+            listeners[eventName] = ls;
+        }
+        return ls;
+    }
+
+	this.fire = function(eventName, eventData) {
+        listenersFor(eventName).forEach(function(listener) {
+            listener.call(undefined, eventName, eventData);
+        });
+    }
+
+	this.addListener = function(eventNames, listener) {
         if (typeof eventNames === 'string') {
             eventNames = [eventNames];
         }
         eventNames.forEach(function(eventName) {
-            if (this.listeners[eventName] === undefined) {
-    			this.listeners[eventName] = [];
-    		}
-    		this.listeners[eventName].push(listener);
-        }.bind(this));
-	},
+            listenersFor(eventName).push(listener);
+        });
+    };
 
-	removeListener: function(eventName, listener) {
-		var listenersForEvent = this.listeners[eventName];
-		if (listenersForEvent !== undefined) {
-			var idx = listenersForEvent.indexOf(listener);
-            listenersForEvent.splice(idx, 1);
-		}
-	}
+	this.removeListener = function(eventName, listener) {
+        var ls = listenersFor(eventName);
+        ls.splice(ls.indexOf(listener), 1);
+    };
 };
 
 App.CommandSequencer = {
