@@ -2,11 +2,15 @@
 // requires Core.<env>.js
 // requires Core.common.js
 
+// this line just makes JSLint ignore the unknown 'App' variable
 var App = App;
+
+// if the namespace object does not already exist, creates it
 if (typeof App === 'undefined') {
     App = {};
 }
 
+// the sequencer is now declared within our namespace
 App.Sequencer = {
     running: false,
 

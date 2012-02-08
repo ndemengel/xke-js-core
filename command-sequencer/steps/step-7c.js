@@ -7,13 +7,9 @@ if (typeof App === 'undefined') {
     App = {};
 }
 
-// this function is a constructor
-// it is also a closure, protecting the publisher internals from the outside
 App.EventPublisher = function() {
-	// private property
     var listeners = {};
 
-	// private method
     function listenersFor(eventName) {
         var ls = listeners[eventName];
         if (!ls) {
@@ -22,9 +18,6 @@ App.EventPublisher = function() {
         }
         return ls;
     }
-
-	// the following public methods are defined by the constructor rather than being attached later to the prototype
-	// that way they beneficiate from the constructor context and can access the "private" members
 
     this.fire = function(eventName, eventData) {
         listenersFor(eventName).forEach(function(listener) {
@@ -47,32 +40,38 @@ App.EventPublisher = function() {
     };
 };
 
-App.Sequencer = (function() {
-    var running = false;
-    var commands = [];
-    var context = {};
+// an example that uses a factory method is provided in command-sequencer/a-solution/CommandSequencer.js
+App.Sequencer = function() { // constructor
+	// calls "super" constructor (gives this object the properties of a publisher)
+	App.EventPublisher.call(this);
+
+	// private members
+   	var running = false;
+   	var commands = [];
+   	var context = {};
 	var listeners = [];
 
-	// instantiates a publisher, and directly uses it as a sequencer
-	var sequencer = new App.EventPublisher();
-
+	// avoids having to bind run() to 'this' each time we call it
+	// reference to 'this' is stored in 'self'
+	var self = this;
     function run() {
-        if (running) {
-            var command = commands.shift();
-            if (!command) {
-				sequencer.stop();
-            }
-            else {
-				sequencer.fire('commandlaunched', command.id);
-                command.execute(context, function() {
-					sequencer.fire('commandexecuted', command.id);
-                	run();
+		if (running) {
+           	var command = commands.shift();
+           	if (!command) {
+				self.stop();
+       		}
+           	else {
+				self.fire('commandlaunched', command.id);
+               	command.execute(context, function() {
+					self.fire('commandexecuted', command.id);
+               		run();
 				});
-            }
-        }
-    }
+           	}
+       	}
+   	}
 
-	return Core.apply(sequencer, {
+	// public members
+	Core.apply(this, {
 		start: function() {
 			this.fire('start');
 			running = true;
@@ -88,12 +87,18 @@ App.Sequencer = (function() {
 			commands.push(command);
 		}
 	});
-})();
+}
+
+// officially defines App.EventPublisher as the prototype of Sequencer
+// also adds any property defined on the publisher's prototype to this prototype (none in this particular case)
+App.Sequencer.prototype = App.EventPublisher.prototype;	
 
 Core.onReady(function() {
-	App.Sequencer.addListener(['start', 'stop', 'commandlaunched', 'commandexecuted'], Core.logln);
+	var sequencer = new App.Sequencer();
 
-    App.Sequencer.addCommand({
+	sequencer.addListener(['start', 'stop', 'commandlaunched', 'commandexecuted'], Core.logln);
+
+    sequencer.addCommand({
 		id: 'firstCommand',
 		execute: function(ctxt, callback) {
 	        Core.log("First command. " + ctxt.firstCommandCalled);
@@ -101,7 +106,7 @@ Core.onReady(function() {
 			callback();
 		}
     });
-    App.Sequencer.addCommand({
+    sequencer.addCommand({
 		id: 'secondCommand',
 		execute: function(ctxt, callback) {
     	    Core.log("Second (asynchronous) command. " + ctxt.firstCommandCalled);
@@ -109,12 +114,12 @@ Core.onReady(function() {
 			Core.delay(callback, 2000);
 		}
     });
-    App.Sequencer.addCommand({
+    sequencer.addCommand({
 		id: 'thirdCommand',
 		execute: function(ctxt, callback) {
         	Core.log("Third command. " + ctxt.secondCommandCalled);
 			callback();
 		}
     });
-    App.Sequencer.start();
+    sequencer.start();
 });

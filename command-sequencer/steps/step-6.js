@@ -11,7 +11,8 @@ App.Sequencer = (function() {
     var running = false;
     var commands = [];
     var context = {};
-	var listeners = [];
+	// will serve as a map (eventName => list of listeners)
+	var listeners = {};
 
     function run() {
         if (running) {
@@ -20,6 +21,7 @@ App.Sequencer = (function() {
 				stop();
             }
             else {
+				// we assume that the command is a proper one and has both .id and .execute defined
 				fire('commandlaunched', command.id);
                 command.execute(context, function() {
 					fire('commandexecuted', command.id);
@@ -29,12 +31,7 @@ App.Sequencer = (function() {
         }
     }
 
-	function fire(eventName, eventData) {
-		listenersFor(eventName).forEach(function(listener) {
-			listener.call(undefined, eventName, eventData);
-		});
-	}
-
+	// utility function to retrieve the list of listeners for a given event, creating it if it does not exist yet
 	function listenersFor(eventName) {
 		var ls = listeners[eventName];
 		if (!ls) {
@@ -42,6 +39,14 @@ App.Sequencer = (function() {
 			listeners[eventName] = ls;
 		}
 		return ls;
+	}
+
+	function fire(eventName, eventData) {
+		listenersFor(eventName).forEach(function(listener) {
+			// we could write listener(eventName, eventData);
+			// but this way we prevent any unwanted use of 'this' inside the listener: it will be undefined
+			listener.call(undefined, eventName, eventData);
+		});
 	}
 
 	function stop() {
@@ -63,6 +68,7 @@ App.Sequencer = (function() {
 		},
 
 		addListener: function(eventNames, listener) {
+			// this function accepts both a single event name and an array of event names
 			if (typeof eventNames === 'string') {
 				eventNames = [eventNames];
 			}
@@ -73,12 +79,16 @@ App.Sequencer = (function() {
 
 		removeListener: function(eventName, listener) {
 			var ls = listenersFor(eventName);
+			// Array.splice removes, adds, or replaces elements of the array, using indices
+			// here, we replace 1 element from the desired index with nothing, i.e. we remove the element
 			ls.splice(ls.indexOf(listener), 1);
 		}
 	};
 })();
 
 Core.onReady(function() {
+	// binds the same listener to all events
+	// a listener being a simple function, directly passed a reference to Core.logln that will log all arguments on separated lines
 	App.Sequencer.addListener(['start', 'stop', 'commandlaunched', 'commandexecuted'], Core.logln);
 
     App.Sequencer.addCommand({

@@ -36,11 +36,14 @@ App.EventPublisher = function() {
 
 	this.removeListener = function(eventName, listener) {
         var ls = listenersFor(eventName);
+		// == ls.remove(listener)
         ls.splice(ls.indexOf(listener), 1);
     };
 };
 
 App.CommandSequencer = {
+
+	// factory method. An example that uses a constructor instead is provided in command-sequencer/steps/step-7c.js
     create: function() {
         var that = Object.create(App.EventPublisher.prototype);
         App.EventPublisher.call(that);

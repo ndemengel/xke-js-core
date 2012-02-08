@@ -7,8 +7,9 @@ if (typeof App === 'undefined') {
     App = {};
 }
 
+// the publishing behavior is exported to a classic object
 App.EventPublisher = {
-	listeners: [],
+	listeners: {},
 	fire: function(eventName, eventData) {
 		this.listenersFor(eventName).forEach(function(listener) {
 			listener.call(undefined, eventName, eventData);
@@ -45,6 +46,7 @@ App.Sequencer = (function() {
     var context = {};
 	var listeners = [];
 
+	// the sequencer uses the publisher object as a prototype
 	var sequencer = Object.create(App.EventPublisher);
 
     function run() {
@@ -63,6 +65,8 @@ App.Sequencer = (function() {
         }
     }
 
+	// Core.apply applies all properties of the second argument to the first one (and returns the first argument)
+	// it is equivalent to: sequencer.start = function() {..}; sequencer.stop = function() {..}, etc.
 	return Core.apply(sequencer, {
 		start: function() {
 			this.fire('start');

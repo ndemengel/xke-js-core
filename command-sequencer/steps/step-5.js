@@ -7,11 +7,14 @@ if (typeof App === 'undefined') {
     App = {};
 }
 
+// defines a closure. The parentheses wrapping the function are not mandatory but are a clue that this function is anonymous and will be called immediatly
 App.Sequencer = (function() {
+	// those are variables local to the function
     var running = false;
     var commands = [];
     var context = {};
 
+	// this function is also local to the surrounding function
     function run() {
         if (running) {
             var command = commands.shift();
@@ -26,6 +29,8 @@ App.Sequencer = (function() {
         }
     }
 
+	// the method of the returned object are public
+	// they also beneficiate from this function's context and therefore have access to its local variables, which are invisible from the outside
 	return {
 		start: function() {
 			running = true;
